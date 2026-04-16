@@ -1,0 +1,23 @@
+{
+  "Title": "Ombre nella Cripta",
+  "Subtitle": "Avventura dark fantasy",
+  "IntroTitle": "Il Terrore dal Profondo",
+  "IntroText": [
+    "È notte fonda e il villaggio è avvolto nel silenzio.",
+    "Strane morti hanno scosso la comunità.",
+    "Qualcosa si muove sotto la chiesa."
+  ],
+  "SummaryBullets": [
+    "Morti misteriose nel villaggio",
+    "La cripta sotto la chiesa è il centro del mistero",
+    "I personaggi devono indagare e scoprire la verità"
+  ],
+  "ClueBullets": [
+    "Simboli rituali incisi nella pietra",
+    "Candele nere ancora accese",
+    "Ossa disposte in cerchio"
+  ],
+  "IntroImage": "../Assets/scene.png",
+  "BackgroundImage": "../Assets/parchment.png",
+  "FrameImage": "../Assets/frame.png"
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{TITLE}}</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+    <!-- PAGINA 1: COPERTINA -->
+    <section class="page cover-page">
+        <img class="cover-image" src="{{INTRO_IMAGE}}" alt="Copertina" />
+
+        <div class="cover-overlay"></div>
+
+        <div class="cover-content">
+            <h1 class="cover-title">{{TITLE}}</h1>
+            <div class="cover-divider"></div>
+            <h2 class="cover-subtitle">{{SUBTITLE}}</h2>
+        </div>
+    </section>
+
+    <!-- PAGINA 2: INTRO -->
+    <section class="page inner-page" style="background-image: url('{{BACKGROUND}}');">
+        <img class="frame-overlay" src="{{FRAME}}" alt="" />
+
+        <div class="content">
+            <h1 class="section-title">{{INTRO_TITLE}}</h1>
+
+            <div class="section-divider"></div>
+
+            <img class="hero" src="{{INTRO_IMAGE}}" alt="Scena introduttiva" />
+
+            <div class="intro-text">
+                {{INTRO_TEXT}}
+            </div>
+
+            <div class="box-row">
+                <div class="info-box">
+                    <h3>IN BREVE</h3>
+                    <ul>
+                        {{SUMMARY}}
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h3>INDIZI PRINCIPALI</h3>
+                    <ul>
+                        {{CLUES}}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>
