@@ -1,5 +1,6 @@
 ﻿using AdventurePdfForge;
 using AdventurePdfForge.Pipeline;
+using AdventurePdfForge.Pipeline.ImageProviders;
 using AdventurePdfForge.Pipeline.Steps;
 using Microsoft.Playwright;
 
@@ -7,26 +8,53 @@ using Microsoft.Playwright;
 var buildAssetPrompt = args.Contains("-buildassetprompt", StringComparer.OrdinalIgnoreCase);
 var buildAsset = args.Contains("-buildasset", StringComparer.OrdinalIgnoreCase);
 
-// ── Pipeline setup ──────────────────────────────────────
+var providerIndex = Array.FindIndex(args, a => a.Equals("-provider", StringComparison.OrdinalIgnoreCase));
+var providerName = providerIndex >= 0 && providerIndex + 1 < args.Length
+    ? args[providerIndex + 1].ToLowerInvariant()
+    : "comfyui";
+
+var dpiIndex = Array.FindIndex(args, a => a.Equals("-dpi", StringComparison.OrdinalIgnoreCase));
+var imageDpi = dpiIndex >= 0 && dpiIndex + 1 < args.Length
+    ? int.Parse(args[dpiIndex + 1])
+    : 300;
+
+var assetIndex = Array.FindIndex(args, a => a.Equals("-asset", StringComparison.OrdinalIgnoreCase));
+var assetFilter = assetIndex >= 0 && assetIndex + 1 < args.Length
+    ? args[assetIndex + 1]
+    : null;
+
 var context = new PipelineContext
 {
     JsonPath = "Data/ombre-nella-cripta.json",
     OutputDir = "Output",
     TemplatesDir = "Templates",
-    AssetsDir = "Assets"
+    AssetsDir = "Assets",
+    ImageDpi = imageDpi,
+    AssetFilter = assetFilter
 };
 
-var pipeline = new PipelineRunner();
-
+// ── Flusso generazione asset (esecuzione dedicata) ──────
 if (buildAssetPrompt || buildAsset)
+{
+    IImageProvider imageProvider = providerName switch
+    {
+        "openai" => new OpenAiImageProvider(),
+        "comfyui" => new ComfyUiImageProvider(),
+        _ => throw new ArgumentException($"Unknown provider: {providerName}. Use 'openai' or 'comfyui'.")
+    };
+    context.ImageProvider = imageProvider;
+
+    var pipeline = new PipelineRunner();
     pipeline.AddStep(new GenerateAssetPromptsStep());
 
-if (buildAsset)
-    pipeline.AddStep(new GenerateAssetsStep());
+    if (buildAsset)
+        pipeline.AddStep(new GenerateAssetsStep());
 
-await pipeline.RunAsync(context);
+    await pipeline.RunAsync(context);
+    return;
+}
 
-// ── Generazione PDF (logica esistente, sarà migrata in step dedicati) ──
+// ── Generazione PDF ─────────────────────────────────────
 
 static string ToDataUri(string path)
 {
@@ -72,7 +100,7 @@ var cssPath = ToFileUrl("Templates/styles.css");
 
 var sceneImage = ToDataUri("Assets/scene.png");
 var backgroundImage = ToDataUri("Assets/parchment.png");
-var frameImage = ToDataUri("Assets/frame.png");
+var introImage = ToDataUri("Assets/introimage.png");
 
 var html = htmlTemplate
     .Replace("{{CSS_PATH}}", cssPath)
@@ -82,9 +110,9 @@ var html = htmlTemplate
     .Replace("{{INTRO_TEXT}}", introHtml)
     .Replace("{{SUMMARY}}", summaryHtml)
     .Replace("{{CLUES}}", cluesHtml)
-    .Replace("{{INTRO_IMAGE}}", sceneImage)
-    .Replace("{{BACKGROUND}}", backgroundImage)
-    .Replace("{{FRAME}}", frameImage);
+    .Replace("{{SCENE_IMAGE}}", sceneImage)
+    .Replace("{{INTRO_IMAGE}}", introImage)
+    .Replace("{{BACKGROUND}}", backgroundImage);
 
 Directory.CreateDirectory("Output");
 await File.WriteAllTextAsync("Output/index.html", html);

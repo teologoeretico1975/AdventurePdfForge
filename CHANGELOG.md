@@ -6,6 +6,40 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.
 
 ---
 
+## [0.3.0] - 2026-04-16
+
+### Aggiunto
+
+- **ComfyUI image provider** — generazione immagini locale gratuita via ComfyUI API + SDXL
+- **Juggernaut XL v9** come checkpoint di default (sostituisce SDXL 1.0 base)
+- **Flussi mutuamente esclusivi** — `-buildasset`/`-buildassetprompt` genera solo asset e termina; senza flag genera solo PDF
+- **Parametro `-dpi`** — scala le dimensioni delle immagini (default 300, 150 per file leggeri)
+- **Parametro `-asset`** — rigenera un singolo asset specifico (es. `-asset scene.png`)
+- **Parametro `-provider`** — seleziona backend (`comfyui` o `openai`)
+- **Asset `introimage.png`** — quarto asset per l'immagine hero della pagina intro
+- Placeholder separati `{{SCENE_IMAGE}}` (copertina) e `{{INTRO_IMAGE}}` (pagina intro)
+- Documentazione **ComfyUI.md** con guida installazione, comandi e troubleshooting
+- Prompt SDXL-optimized (keyword-based, quality boosters, negative prompt esteso)
+- Log del prompt generato per ogni asset durante la generazione
+
+### Corretto
+
+- **Cornice sostituita con CSS puro** — SDXL non produceva bordi sottili; ora doppia linea CSS semi-trasparente
+- **Serializzazione workflow ComfyUI** — `PostAsJsonAsync` ri-serializzava array; usato `JsonObject` + `PostAsync`
+
+### Rimosso
+
+- Asset `frame.png` — la cornice decorativa è ora interamente CSS
+
+### Modificato
+
+- `Program.cs` refactored con flussi mutuamente esclusivi (asset vs PDF)
+- `PipelineContext` esteso con `ImageDpi`, `AssetFilter`, `ImageProvider`
+- `GenerateAssetsStep` supporta scaling DPI e filtro per singolo asset
+- Prompt migliorati per qualità SDXL (scene, parchment, intro)
+
+---
+
 ## [0.2.0] - 2025-07-15
 
 ### Aggiunto

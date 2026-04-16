@@ -1,24 +1,24 @@
-using OpenAI;
-using OpenAI.Images;
-
 namespace AdventurePdfForge.Pipeline.Steps;
 
 /// <summary>
-/// Calls OpenAI DALL-E to generate images from the prompts
-/// stored in <see cref="PipelineContext.AssetPrompts"/>.
-/// Requires the OPENAI_API_KEY environment variable.
+/// Generates images for each asset using the configured <see cref="PipelineContext.ImageProvider"/>.
 /// </summary>
 public class GenerateAssetsStep : IPipelineStep
 {
-    public string Name => "Asset generation (DALL-E)";
+    public string Name => "Asset generation";
     public bool IsOptional => false;
 
-    private static readonly Dictionary<string, GeneratedImageSize> AssetSizes = new()
+    /// <summary>
+    /// Base asset sizes at 300 DPI (reference). Scaled proportionally for other DPI values.
+    /// </summary>
+    private static readonly Dictionary<string, (int Width, int Height)> BaseAssetSizes = new()
     {
-        ["scene.png"] = GeneratedImageSize.W1024xH1792,      // 2:3 portrait cover
-        ["parchment.png"] = GeneratedImageSize.W1024xH1792,   // A4-like background
-        ["frame.png"] = GeneratedImageSize.W1024xH1792         // A4-like frame
+        ["scene.png"] = (1024, 1792),
+        ["parchment.png"] = (1024, 1792),
+        ["introimage.png"] = (1792, 1024)
     };
+
+    private const int ReferenceDpi = 300;
 
     public async Task<bool> ExecuteAsync(PipelineContext context)
     {
@@ -28,37 +28,55 @@ public class GenerateAssetsStep : IPipelineStep
             return false;
         }
 
-        var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-        if (string.IsNullOrWhiteSpace(apiKey))
+        if (context.ImageProvider is null)
         {
-            Console.WriteLine("    ❌ OPENAI_API_KEY environment variable not set.");
+            Console.WriteLine("    ❌ No image provider configured.");
             return false;
         }
 
-        var client = new OpenAIClient(apiKey);
-        var imageClient = client.GetImageClient("dall-e-3");
+        Console.WriteLine($"    🔌 Using provider: {context.ImageProvider.Name}");
+        Console.WriteLine($"    📐 DPI target: {context.ImageDpi}");
 
         Directory.CreateDirectory(context.AssetsDir);
 
-        foreach (var (assetName, prompt) in context.AssetPrompts)
+        var assetsToGenerate = context.AssetFilter is not null
+            ? context.AssetPrompts
+                .Where(kv => kv.Key.Equals(context.AssetFilter, StringComparison.OrdinalIgnoreCase))
+                .ToDictionary(kv => kv.Key, kv => kv.Value)
+            : context.AssetPrompts;
+
+        if (assetsToGenerate.Count == 0)
+        {
+            Console.WriteLine($"    ⚠️ Asset '{context.AssetFilter}' not found. Available: {string.Join(", ", context.AssetPrompts.Keys)}");
+            return false;
+        }
+
+        if (context.AssetFilter is not null)
+            Console.WriteLine($"    🎯 Generating only: {context.AssetFilter}");
+
+        foreach (var (assetName, prompt) in assetsToGenerate)
         {
             Console.WriteLine($"    🎨 Generating {assetName}...");
+            Console.WriteLine($"       📝 Prompt: {prompt}");
 
-            var size = AssetSizes.GetValueOrDefault(assetName, GeneratedImageSize.W1024xH1792);
+            var (baseW, baseH) = BaseAssetSizes.GetValueOrDefault(assetName, (1024, 1792));
+            var scale = context.ImageDpi / (double)ReferenceDpi;
+            var width = (int)(baseW * scale);
+            var height = (int)(baseH * scale);
 
-            var options = new ImageGenerationOptions
-            {
-                Quality = GeneratedImageQuality.High,
-                Size = size,
-                Style = GeneratedImageStyle.Vivid,
-                ResponseFormat = GeneratedImageFormat.Bytes
-            };
-
-            var result = await imageClient.GenerateImageAsync(prompt, options);
-            var imageBytes = result.Value.ImageBytes;
+            // SDXL richiede dimensioni multiple di 8
+            width = width / 8 * 8;
+            height = height / 8 * 8;
 
             var outputPath = Path.Combine(context.AssetsDir, assetName);
-            await File.WriteAllBytesAsync(outputPath, imageBytes.ToArray());
+
+            var success = await context.ImageProvider.GenerateImageAsync(prompt, outputPath, width, height);
+
+            if (!success)
+            {
+                Console.WriteLine($"    ❌ Failed to generate {assetName}.");
+                return false;
+            }
 
             context.AssetPaths[assetName] = outputPath;
             Console.WriteLine($"    ✅ {assetName} saved to {outputPath}");

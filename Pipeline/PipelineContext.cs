@@ -1,3 +1,5 @@
+using AdventurePdfForge.Pipeline.ImageProviders;
+
 namespace AdventurePdfForge.Pipeline;
 
 /// <summary>
@@ -9,6 +11,15 @@ public class PipelineContext
     public required string OutputDir { get; init; }
     public required string TemplatesDir { get; init; }
     public required string AssetsDir { get; init; }
+
+    /// <summary>Image generation backend to use.</summary>
+    public IImageProvider? ImageProvider { get; set; }
+
+    /// <summary>DPI target per le immagini generate (default 300). Valori più bassi producono file più leggeri.</summary>
+    public int ImageDpi { get; init; } = 300;
+
+    /// <summary>Se valorizzato, limita la generazione al solo asset specificato (es. "frame.png").</summary>
+    public string? AssetFilter { get; init; }
 
     /// <summary>Dati dell'avventura deserializzati dal JSON.</summary>
     public Adventure? Adventure { get; set; }

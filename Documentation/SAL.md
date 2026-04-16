@@ -1,6 +1,6 @@
 # 📋 AdventurePdfForge — Stato Avanzamento Lavori
 
-> Ultimo aggiornamento: Luglio 2025
+> Ultimo aggiornamento: Aprile 2026
 > Branch: `main`
 
 ---
@@ -9,6 +9,7 @@
 
 Tool .NET 10 per la generazione semi-automatica di PDF (micro-avventure D&D dark fantasy).
 Dato un JSON strutturato, produce un PDF A4 con copertina e pagina interna tramite Playwright.
+Le immagini vengono generate localmente tramite ComfyUI (SDXL) o cloud via OpenAI DALL-E 3.
 
 ---
 
@@ -22,20 +23,25 @@ PdfForge/
 │   ├── IPipelineStep.cs          # Interfaccia step
 │   ├── PipelineContext.cs        # Contesto condiviso tra step
 │   ├── PipelineRunner.cs         # Runner con logging e gestione step opzionali
+│   ├── ImageProviders/
+│   │   ├── IImageProvider.cs     # Interfaccia provider immagini
+│   │   ├── ComfyUiImageProvider.cs  # Backend locale (ComfyUI + SDXL)
+│   │   └── OpenAiImageProvider.cs   # Backend cloud (DALL-E 3)
 │   └── Steps/
 │       ├── GenerateAssetPromptsStep.cs   # Genera prompt AI per ogni asset
-│       └── GenerateAssetsStep.cs         # Chiama DALL-E 3 per generare immagini
+│       └── GenerateAssetsStep.cs         # Genera immagini via provider configurato
 ├── Templates/
 │   ├── document-template.html    # Template HTML con placeholder
-│   └── styles.css                # CSS per copertina + pagina interna
+│   └── styles.css                # CSS per copertina + pagina interna + cornice CSS
 ├── Data/
 │   └── ombre-nella-cripta.json   # JSON avventura di esempio
-├── Assets/                       # Immagini (scene.png, parchment.png, frame.png)
+├── Assets/                       # Immagini (scene.png, parchment.png, introimage.png)
 ├── Output/                       # HTML e PDF generati
 ├── Documentation/
 │   ├── Constitution.md           # Principi e architettura del progetto
+│   ├── ComfyUI.md                # Guida installazione e configurazione ComfyUI
 │   └── SAL.md                    # Questo file (stato avanzamento)
-├── Program.cs                    # Entry point con pipeline + generazione PDF
+├── Program.cs                    # Entry point con flussi mutuamente esclusivi
 └── AdventurePdfForge.csproj
 ```
 
@@ -47,7 +53,9 @@ PdfForge/
 |---|---|
 | Runtime | .NET 10 / C# 14 |
 | PDF rendering | Playwright (Chromium headless) |
-| Image generation | OpenAI DALL-E 3 (pacchetto `OpenAI` 2.10.0) |
+| Image generation (locale) | ComfyUI 0.19.1 + Juggernaut XL v9 (SDXL) |
+| Image generation (cloud) | OpenAI DALL-E 3 (pacchetto `OpenAI` 2.10.0) |
+| GPU | NVIDIA GTX 1070 8 GB VRAM, PyTorch 2.11.0+cu126 |
 | Template | HTML + CSS con placeholder `{{...}}` |
 
 ---
@@ -56,26 +64,37 @@ PdfForge/
 
 ### Pipeline modulare
 - `IPipelineStep` — interfaccia con `Name`, `IsOptional`, `ExecuteAsync`
-- `PipelineContext` — contesto condiviso (Adventure, AssetPrompts, AssetPaths, FinalHtml, PdfPath)
+- `PipelineContext` — contesto condiviso (Adventure, AssetPrompts, AssetPaths, ImageDpi, AssetFilter)
 - `PipelineRunner` — esegue step in sequenza, gestisce step opzionali con logging emoji
 
+### Provider immagini (IImageProvider)
+- **`ComfyUiImageProvider`** (default) — generazione locale gratuita via ComfyUI API, checkpoint Juggernaut XL v9
+- **`OpenAiImageProvider`** — generazione cloud via DALL-E 3 (richiede `OPENAI_API_KEY`)
+
 ### Step implementati
-1. **`GenerateAssetPromptsStep`** — Legge il JSON, estrae tema/mood, genera prompt in inglese per 3 asset:
+1. **`GenerateAssetPromptsStep`** — Genera prompt SDXL-optimized per 3 asset:
    - `scene.png` (copertina, digital painting dark fantasy)
    - `parchment.png` (texture pergamena)
-   - `frame.png` (cornice gotica sottile con centro trasparente)
-2. **`GenerateAssetsStep`** — Chiama DALL-E 3 via API OpenAI, salva le immagini in `Assets/`. Richiede `OPENAI_API_KEY` come variabile d'ambiente.
+   - `introimage.png` (immagine hero per pagina intro)
+2. **`GenerateAssetsStep`** — Genera immagini via provider configurato, con scaling DPI e filtro per singolo asset
 
-### CLI arguments
+### Flussi mutuamente esclusivi
 | Flag | Effetto |
 |---|---|
 | *(nessuno)* | Genera solo il PDF usando gli asset esistenti |
-| `-buildassetprompt` | Esegue solo la generazione delle prompt (senza chiamare DALL-E) |
-| `-buildasset` | Genera prompt + chiama DALL-E + salva immagini in Assets/ |
+| `-buildassetprompt` | Esegue solo la generazione delle prompt e termina |
+| `-buildasset` | Genera prompt + immagini e termina (no PDF) |
+| `-buildasset -asset scene.png` | Rigenera solo l'asset specificato |
+| `-dpi 150` | Scala le dimensioni per immagini più leggere |
+| `-provider openai` | Usa DALL-E 3 invece di ComfyUI |
+
+### Cornice pagina (CSS puro)
+- Bordo gotico sottile realizzato interamente in CSS (doppia linea semi-trasparente)
+- Eliminata la generazione AI della cornice (SDXL non riusciva a produrre bordi sottili)
 
 ### Generazione PDF (logica inline in Program.cs)
 - Deserializza JSON → compone HTML da template → converte immagini in data URI base64
-- CSS linkato tramite placeholder `{{CSS_PATH}}` (risolto come `file:///` URL assoluto)
+- CSS linkato tramite placeholder `{{CSS_PATH}}`
 - Genera PDF A4 senza margini con Playwright
 
 ---
@@ -87,7 +106,7 @@ PdfForge/
 | `BuildHtmlStep` | Migra la composizione HTML da Program.cs in uno step dedicato |
 | `RenderPdfStep` | Migra la generazione PDF (Playwright) in uno step dedicato |
 | Gestione multi-pagina | Supporto per avventure con più sezioni/pagine |
-| Post-processing asset | Resize/crop immagini con ImageSharp, rimozione sfondo per frame.png |
+| Post-processing asset | Resize/crop immagini con ImageSharp |
 | Agent orchestratore | Orchestrazione completa JSON → prompt → asset → PDF via Semantic Kernel o simile |
 
 ---
@@ -97,7 +116,10 @@ PdfForge/
 | Problema | Stato | Note |
 |---|---|---|
 | `DirectoryNotFoundException` su Templates/ | ✅ Risolto | Aggiunto `CopyToOutputDirectory` nel .csproj |
-| CSS non applicato nel PDF | ✅ Risolto | Il template usava `href="styles.css"` relativo; aggiunto placeholder `{{CSS_PATH}}` con URL assoluto |
+| CSS non applicato nel PDF | ✅ Risolto | Aggiunto placeholder `{{CSS_PATH}}` con URL assoluto |
+| ComfyUI workflow JSON serialization | ✅ Risolto | `PostAsJsonAsync` ri-serializzava gli array; usato `JsonObject` + `PostAsync` raw |
+| PyTorch no CUDA su GTX 1070 | ✅ Risolto | Reinstallato torch con cu126 |
+| Cornice AI troppo pesante | ✅ Risolto | Sostituita con bordo CSS puro |
 | Cornice troppo interna e trasparente | ✅ Risolto | Cambiato `inset: 10mm` → `inset: 0`, `opacity: 0.22` → `0.45`, `object-fit: fill` |
 | frame.png non ideale come asset | ⚠️ Aperto | Serve immagine con centro trasparente (alpha); DALL-E non genera bene la trasparenza |
 
