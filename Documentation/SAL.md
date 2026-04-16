@@ -96,6 +96,15 @@ PdfForge/
 - Deserializza JSON → compone HTML da template → converte immagini in data URI base64
 - CSS linkato tramite placeholder `{{CSS_PATH}}`
 - Genera PDF A4 senza margini con Playwright
+- **6 pagine**: copertina, intro, hook+twist, indizi dettagliati, struttura scena, fail forward
+
+### Modello dati (`Adventure`)
+- Proprietà base: `Title`, `Subtitle`, `IntroTitle`, `IntroText`, `SummaryBullets`, `ClueBullets`
+- Hook/Twist: `Hook`, `Twist`
+- Indizi dettagliati: `CluesDetailed` → `ClueDetail` (Title, Description, Interpretation, Risk)
+- Struttura scena: `SceneStructure` → `SceneStructureData` (Entry, Distortion, Revelation, Climax)
+- Fail forward: `FailForward` → `FailForwardData` (Failure, Consequence, Escalation)
+- `FooterNote`
 
 ---
 
@@ -105,7 +114,6 @@ PdfForge/
 |---|---|
 | `BuildHtmlStep` | Migra la composizione HTML da Program.cs in uno step dedicato |
 | `RenderPdfStep` | Migra la generazione PDF (Playwright) in uno step dedicato |
-| Gestione multi-pagina | Supporto per avventure con più sezioni/pagine |
 | Post-processing asset | Resize/crop immagini con ImageSharp |
 | Agent orchestratore | Orchestrazione completa JSON → prompt → asset → PDF via Semantic Kernel o simile |
 
@@ -120,8 +128,6 @@ PdfForge/
 | ComfyUI workflow JSON serialization | ✅ Risolto | `PostAsJsonAsync` ri-serializzava gli array; usato `JsonObject` + `PostAsync` raw |
 | PyTorch no CUDA su GTX 1070 | ✅ Risolto | Reinstallato torch con cu126 |
 | Cornice AI troppo pesante | ✅ Risolto | Sostituita con bordo CSS puro |
-| Cornice troppo interna e trasparente | ✅ Risolto | Cambiato `inset: 10mm` → `inset: 0`, `opacity: 0.22` → `0.45`, `object-fit: fill` |
-| frame.png non ideale come asset | ⚠️ Aperto | Serve immagine con centro trasparente (alpha); DALL-E non genera bene la trasparenza |
 
 ---
 

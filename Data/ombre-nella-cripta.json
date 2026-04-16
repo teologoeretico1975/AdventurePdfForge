@@ -1,23 +1,65 @@
 {
   "Title": "Ombre nella Cripta",
-  "Subtitle": "Avventura dark fantasy",
+  "Subtitle": "Avventura investigativa dark fantasy",
+  "CoverImage": "{{COVER_IMAGE}}",
+  "BackgroundImage": "{{BACKGROUND_IMAGE}}",
+  "FrameImage": "{{FRAME_IMAGE}}",
+
   "IntroTitle": "Il Terrore dal Profondo",
   "IntroText": [
-    "È notte fonda e il villaggio è avvolto nel silenzio.",
-    "Strane morti hanno scosso la comunità.",
-    "Qualcosa si muove sotto la chiesa."
+    "È notte fonda e il villaggio è avvolto nel silenzio. Negli ultimi giorni, diverse persone sono morte senza una causa apparente.",
+    "I corpi vengono sepolti nella cripta sotto la chiesa, ma al mattino successivo le tombe risultano violate dall'interno.",
+    "Chi scende nella cripta riferisce corridoi che cambiano, simboli che compaiono e scompaiono, e la sensazione costante di essere osservati."
   ],
+
+  "Hook": "Ogni notte, la cripta sotto la chiesa cambia disposizione. I morti non restano dove vengono sepolti.",
+  "Twist": "La cripta esiste in due versioni sovrapposte: una reale e una rituale. I personaggi attraversano entrambe senza accorgersene.",
+
   "SummaryBullets": [
-    "Morti misteriose nel villaggio",
-    "La cripta sotto la chiesa è il centro del mistero",
-    "I personaggi devono indagare e scoprire la verità"
+    "La cripta cambia configurazione ad ogni accesso",
+    "I morti vengono spostati da una forza rituale",
+    "I personaggi devono capire quale versione della cripta stanno attraversando"
   ],
+
   "ClueBullets": [
-    "Simboli rituali incisi nella pietra",
-    "Candele nere ancora accese",
-    "Ossa disposte in cerchio"
+    "Simboli rituali diversi compaiono sulle pareti ad ogni visita",
+    "Le candele si consumano e si riaccendono da sole",
+    "Alcuni cadaveri mostrano segni di movimento post-mortem"
   ],
-  "IntroImage": "../Assets/scene.png",
-  "BackgroundImage": "../Assets/parchment.png",
-  "FrameImage": "../Assets/frame.png"
+
+  "CluesDetailed": [
+    {
+      "Title": "Simboli Mutanti",
+      "Description": "I simboli incisi nella pietra cambiano forma tra una visita e l'altra.",
+      "Interpretation": "Indicano che la cripta è instabile e soggetta a un rituale attivo.",
+      "Risk": "Restare troppo a lungo vicino ai simboli può causare allucinazioni o perdita di orientamento."
+    },
+    {
+      "Title": "Candele Eterne",
+      "Description": "Le candele sembrano consumarsi, ma tornano integre quando non osservate.",
+      "Interpretation": "Il tempo nella cripta non scorre in modo lineare.",
+      "Risk": "I personaggi possono perdere la percezione del tempo trascorso."
+    },
+    {
+      "Title": "Cadaveri Erranti",
+      "Description": "Alcuni corpi risultano spostati o in posizioni impossibili.",
+      "Interpretation": "I morti vengono utilizzati come parte di un rituale incompleto.",
+      "Risk": "Un cadavere potrebbe animarsi temporaneamente durante l'esplorazione."
+    }
+  ],
+
+  "SceneStructure": {
+    "Entry": "I personaggi scendono nella cripta e trovano un ambiente apparentemente normale.",
+    "Distortion": "Dopo pochi minuti, la disposizione delle stanze cambia impercettibilmente.",
+    "Revelation": "Scoprono che esistono due versioni della cripta sovrapposte.",
+    "Climax": "Il rituale tenta di completarsi usando uno dei personaggi come catalizzatore."
+  },
+
+  "FailForward": {
+    "Failure": "Se i personaggi non comprendono il meccanismo, restano intrappolati nella versione rituale della cripta.",
+    "Consequence": "Il villaggio subirà nuove morti e il rituale diventerà più stabile.",
+    "Escalation": "La cripta inizierà a manifestarsi anche fuori dalla chiesa."
+  },
+
+  "FooterNote": "Micro-avventura dark fantasy per sessioni one-shot o inserimento in campagne investigative."
 }

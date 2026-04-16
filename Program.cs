@@ -96,6 +96,10 @@ var introHtml = string.Join("", data.IntroText.Select(x => $"<p>{x}</p>"));
 var summaryHtml = string.Join("", data.SummaryBullets.Select(x => $"<li>{x}</li>"));
 var cluesHtml = string.Join("", data.ClueBullets.Select(x => $"<li>{x}</li>"));
 
+// Pagina 4: indizi dettagliati
+var cluesDetailedHtml = string.Join("", data.CluesDetailed.Select(c =>
+    $"""<div class="full-box"><h2>{c.Title}</h2><p><strong>Descrizione:</strong> {c.Description}</p><p><strong>Interpretazione:</strong> {c.Interpretation}</p><p><strong>Rischio:</strong> {c.Risk}</p></div>"""));
+
 var cssPath = ToFileUrl("Templates/styles.css");
 
 var sceneImage = ToDataUri("Assets/scene.png");
@@ -112,7 +116,22 @@ var html = htmlTemplate
     .Replace("{{CLUES}}", cluesHtml)
     .Replace("{{SCENE_IMAGE}}", sceneImage)
     .Replace("{{INTRO_IMAGE}}", introImage)
-    .Replace("{{BACKGROUND}}", backgroundImage);
+    .Replace("{{BACKGROUND}}", backgroundImage)
+    // Pagina 3: Hook + Twist
+    .Replace("{{HOOK}}", data.Hook)
+    .Replace("{{TWIST}}", data.Twist)
+    // Pagina 4: Indizi dettagliati
+    .Replace("{{CLUES_DETAILED}}", cluesDetailedHtml)
+    // Pagina 5: Struttura scena
+    .Replace("{{SCENE_ENTRY}}", data.SceneStructure.Entry)
+    .Replace("{{SCENE_DISTORTION}}", data.SceneStructure.Distortion)
+    .Replace("{{SCENE_REVELATION}}", data.SceneStructure.Revelation)
+    .Replace("{{SCENE_CLIMAX}}", data.SceneStructure.Climax)
+    // Pagina 6: Fail forward
+    .Replace("{{FAILURE}}", data.FailForward.Failure)
+    .Replace("{{CONSEQUENCE}}", data.FailForward.Consequence)
+    .Replace("{{ESCALATION}}", data.FailForward.Escalation)
+    .Replace("{{FOOTER_NOTE}}", data.FooterNote);
 
 Directory.CreateDirectory("Output");
 await File.WriteAllTextAsync("Output/index.html", html);

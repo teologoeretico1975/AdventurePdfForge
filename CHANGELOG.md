@@ -6,6 +6,32 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.
 
 ---
 
+## [0.4.0] - 2026-04-16
+
+### Aggiunto
+
+- **Supporto multi-pagina** — il PDF ora genera 6 pagine complete:
+  - Pagina 1: Copertina
+  - Pagina 2: Intro + riassunto + indizi
+  - Pagina 3: Hook + Twist + nota d'uso
+  - Pagina 4: Indizi dettagliati (con descrizione, interpretazione, rischio)
+  - Pagina 5: Struttura della scena (Ingresso → Distorsione → Rivelazione → Climax)
+  - Pagina 6: Fail forward (fallimento, conseguenza, escalation) + footer
+- **Modello `Adventure` esteso** con `Hook`, `Twist`, `CluesDetailed`, `SceneStructure`, `FailForward`, `FooterNote`
+- **Classi dati** `ClueDetail`, `SceneStructureData`, `FailForwardData`
+- **Nuovi stili CSS**: `.full-box`, `.large-box`, `.note-box`, `.timeline-box`, `.timeline-step`, `.footer-note`
+- Tutti i nuovi placeholder nel template HTML e in Program.cs
+
+### Corretto
+
+- **Template HTML pagine 3-6** — uniformate a pagina 2: `{{BACKGROUND}}` invece di `{{BACKGROUND_IMAGE}}`, cornice CSS `<div>` invece di `<img>`
+
+### Rimosso
+
+- Proprietà legacy `IntroImage`, `BackgroundImage`, `FrameImage` dal modello `Adventure`
+
+---
+
 ## [0.3.0] - 2026-04-16
 
 ### Aggiunto
