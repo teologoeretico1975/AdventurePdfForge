@@ -1,6 +1,32 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using AdventurePdfForge;
+using AdventurePdfForge.Pipeline;
+using AdventurePdfForge.Pipeline.Steps;
 using Microsoft.Playwright;
+
+// ── Parsing opzioni da riga di comando ──────────────────
+var buildAssetPrompt = args.Contains("-buildassetprompt", StringComparer.OrdinalIgnoreCase);
+var buildAsset = args.Contains("-buildasset", StringComparer.OrdinalIgnoreCase);
+
+// ── Pipeline setup ──────────────────────────────────────
+var context = new PipelineContext
+{
+    JsonPath = "Data/ombre-nella-cripta.json",
+    OutputDir = "Output",
+    TemplatesDir = "Templates",
+    AssetsDir = "Assets"
+};
+
+var pipeline = new PipelineRunner();
+
+if (buildAssetPrompt || buildAsset)
+    pipeline.AddStep(new GenerateAssetPromptsStep());
+
+if (buildAsset)
+    pipeline.AddStep(new GenerateAssetsStep());
+
+await pipeline.RunAsync(context);
+
+// ── Generazione PDF (logica esistente, sarà migrata in step dedicati) ──
 
 static string ToDataUri(string path)
 {
@@ -20,14 +46,16 @@ static string ToDataUri(string path)
     return $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
 }
 
-var json = await File.ReadAllTextAsync("Data/ombre-nella-cripta.json");
+// Se la pipeline non ha deserializzato l'avventura, lo facciamo qui
+if (context.Adventure is null)
+{
+    var json = await File.ReadAllTextAsync(context.JsonPath);
+    context.Adventure = System.Text.Json.JsonSerializer.Deserialize<Adventure>(
+        json,
+        new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+}
 
-var data = JsonSerializer.Deserialize<Adventure>(
-    json,
-    new JsonSerializerOptions
-    {
-        PropertyNameCaseInsensitive = true
-    })!;
+var data = context.Adventure!;
 
 var htmlTemplate = await File.ReadAllTextAsync("Templates/document-template.html");
 
@@ -47,6 +75,7 @@ var backgroundImage = ToDataUri("Assets/parchment.png");
 var frameImage = ToDataUri("Assets/frame.png");
 
 var html = htmlTemplate
+    .Replace("{{CSS_PATH}}", cssPath)
     .Replace("{{TITLE}}", data.Title)
     .Replace("{{SUBTITLE}}", data.Subtitle)
     .Replace("{{INTRO_TITLE}}", data.IntroTitle)
@@ -76,16 +105,3 @@ await page.PdfAsync(new()
     PrintBackground = true,
     Margin = new() { Top = "0", Right = "0", Bottom = "0", Left = "0" }
 });
-
-public class Adventure
-{
-    public string Title { get; set; } = "";
-    public string Subtitle { get; set; } = "";
-    public string IntroTitle { get; set; } = "";
-    public List<string> IntroText { get; set; } = new();
-    public List<string> SummaryBullets { get; set; } = new();
-    public List<string> ClueBullets { get; set; } = new();
-    public string IntroImage { get; set; } = "";
-    public string BackgroundImage { get; set; } = "";
-    public string FrameImage { get; set; } = "";
-}

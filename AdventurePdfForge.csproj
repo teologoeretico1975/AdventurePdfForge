@@ -9,11 +9,24 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Playwright" Version="1.59.0" />
+    <PackageReference Include="OpenAI" Version="2.10.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Assets\" />
     <Folder Include="Output\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Templates\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
